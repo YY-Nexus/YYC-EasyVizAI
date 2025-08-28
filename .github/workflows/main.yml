@@ -1,0 +1,4 @@
+- name: Debug Variables
+  run: |
+    echo "DOCKER_USER: ${{ vars.DOCKER_USER }}"
+    echo "DOCKER_PAT: ${{ secrets.DOCKER_PAT }}"  # 密钥会显示为 ***，但能验证是否非空
