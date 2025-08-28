@@ -1,0 +1,403 @@
+openapi: 3.0.3
+info:
+  title: YYC³ EasyVizAI API
+  version: 1.0.0-draft
+  description: |
+    Core endpoints for Auth, Chat, Miyu private space, Learning Path, Code Intelligence, Report Builder, Feature Flags.
+    NOTE: This is a skeleton; details to be iteratively enriched.
+servers:
+  - url: https://api.easyvizai.com
+tags:
+  - name: Auth
+  - name: Chat
+  - name: Emotion
+  - name: Miyu
+  - name: Learning
+  - name: Code
+  - name: Report
+  - name: Flags
+  - name: Admin
+security:
+  - bearerAuth: []
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string, format: password }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/v1/chat/session:
+    post:
+      tags: [Chat]
+      summary: Create chat session
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatSession"
+  /api/v1/chat/session/{id}/message:
+    post:
+      tags: [Chat]
+      summary: Send message (optionally streamed)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: stream
+          schema: { type: boolean, default: false }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        "200":
+          description: Message result (non-stream)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+  /api/v1/miyu/auth/enter:
+    post:
+      tags: [Miyu]
+      summary: Initiate entry to Miyu private layer
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  methods:
+                    type: array
+                    items: { type: string }
+  /api/v1/miyu/auth/verify:
+    post:
+      tags: [Miyu]
+      summary: Verify second factor and obtain PST token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method: { type: string, enum: [totp, webauthn] }
+                code: { type: string }
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pst_token: { type: string }
+                  expires_in: { type: integer }
+  /api/v1/miyu/diary:
+    get:
+      tags: [Miyu]
+      summary: List diary entries (decrypted server-side or cipher blobs)
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20, maximum: 100 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MiyuDiaryList"
+    post:
+      tags: [Miyu]
+      summary: Create diary entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MiyuDiaryCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entry_id: { type: string }
+                  created_at: { type: string, format: date-time }
+  /api/v1/learning/graph:
+    get:
+      tags: [Learning]
+      summary: Retrieve learning graph
+      responses:
+        "200":
+          description: Graph
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningGraph"
+  /api/v1/code/analyze:
+    post:
+      tags: [Code]
+      summary: Submit code analysis task
+      parameters:
+        - in: query
+          name: async
+          schema: { type: boolean, default: true }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                options:
+                  type: string
+                  description: JSON encoded options
+      responses:
+        "202":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CodeTaskStatus"
+  /api/v1/report/task:
+    post:
+      tags: [Report]
+      summary: Create report generation task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportTaskCreate"
+      responses:
+        "202":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportTaskStatus"
+  /api/v1/report/task/{id}/status:
+    get:
+      tags: [Report]
+      summary: Get report task status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportTaskStatus"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    pstAuth:
+      type: apiKey
+      in: header
+      name: X-PST
+  schemas:
+    Meta:
+      type: object
+      properties:
+        trace_id: { type: string }
+        t: { type: string, format: date-time }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+            trace_id: { type: string }
+    AuthResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            access_token: { type: string }
+            refresh_token: { type: string }
+            expires_in: { type: integer }
+            miyu_enabled: { type: boolean }
+        meta:
+          $ref: "#/components/schemas/Meta"
+    ChatSession:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            session_id: { type: string }
+            created_at: { type: string, format: date-time }
+            title: { type: string }
+        meta:
+          $ref: "#/components/schemas/Meta"
+    SendMessageRequest:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string }
+        system_overrides: { type: object }
+        metadata:
+          type: object
+          properties:
+            tags:
+              type: array
+              items: { type: string }
+    ChatMessage:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            message_id: { type: string }
+            role: { type: string, enum: [user, assistant, system, tool] }
+            content: { type: string }
+            tokens: { type: integer }
+            created_at: { type: string, format: date-time }
+            emotion_snapshot: { type: string }
+        meta:
+          $ref: "#/components/schemas/Meta"
+    MiyuDiaryCreate:
+      type: object
+      required: [cipher_blob]
+      properties:
+        cipher_blob: { type: string, description: "Base64 encrypted payload" }
+        client_encryption: { type: boolean, default: true }
+        emotion_hint: { type: string }
+        retention_policy: { type: string, enum: [7d,30d,90d,permanent] }
+    MiyuDiaryEntry:
+      type: object
+      properties:
+        entry_id: { type: string }
+        created_at: { type: string, format: date-time }
+        emotion_hint: { type: string }
+        cipher_blob: { type: string }
+    MiyuDiaryList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MiyuDiaryEntry"
+        meta:
+          type: object
+          properties:
+            next_cursor: { type: string }
+            has_more: { type: boolean }
+    LearningGraph:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            nodes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  label: { type: string }
+                  prerequisites:
+                    type: array
+                    items: { type: string }
+                  difficulty: { type: integer }
+            edges:
+              type: array
+              items:
+                type: object
+                properties:
+                  from: { type: string }
+                  to: { type: string }
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CodeTaskStatus:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            task_id: { type: string }
+            state: { type: string }
+            progress: { type: number }
+            stages:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: { type: string }
+                  done: { type: boolean }
+                  percent: { type: number }
+        meta:
+          $ref: "#/components/schemas/Meta"
+    ReportTaskCreate:
+      type: object
+      required: [sections]
+      properties:
+        title: { type: string }
+        sections:
+          type: array
+          items:
+            type: object
+            required: [id, type]
+            properties:
+              id: { type: string }
+              type: { type: string }
+              prompt: { type: string }
+              range_days: { type: integer }
+    ReportTaskStatus:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            task_id: { type: string }
+            state: { type: string }
+            progress: { type: number }
+            completed_sections: { type: integer }
+            total_sections: { type: integer }
+        meta:
+          $ref: "#/components/schemas/Meta"
