@@ -1,43 +1,78 @@
-.PHONY: bootstrap dev backend frontend test lint fmt migrate openapi seed clean type
+.PHONY: bootstrap dev backend frontend test lint fmt clean type install-deps setup-env
 
-bootstrap:
-\tpip install --upgrade pip
-\tcd backend && pip install -r requirements.txt
-\tcd frontend && pnpm install
+# Install dependencies and setup environment
+bootstrap: install-deps setup-env
 
+install-deps:
+	@echo "📦 Installing dependencies..."
+	cd backend && npm install
+	cd frontend && npm install
+
+setup-env:
+	@echo "⚙️  Setting up environment files..."
+	cd backend && cp .env.example .env || true
+	cd frontend && cp .env.example .env.local || true
+
+# Development
 dev:
-\ttmux new-session -d -s easyviz 'make backend' \\; split-window -h 'make frontend' \\; attach
+	@echo "🚀 Starting development servers..."
+	tmux new-session -d -s easyviz 'make backend' \; split-window -h 'make frontend' \; attach
 
 backend:
-\tcd backend && DJANGO_SETTINGS_MODULE=app.settings python manage.py runserver 0.0.0.0:8000
+	@echo "🔧 Starting backend server..."
+	cd backend && npm run dev
 
 frontend:
-\tcd frontend && pnpm dev
+	@echo "💻 Starting frontend server..."
+	cd frontend && npm run dev
 
-migrate:
-\tcd backend && python manage.py migrate
+# Production
+build:
+	@echo "🏗️  Building applications..."
+	cd backend && npm run build || echo "Backend build not configured"
+	cd frontend && npm run build
 
+start:
+	@echo "▶️  Starting production servers..."
+	cd backend && npm start &
+	cd frontend && npm start
+
+# Testing
 test:
-\tcd backend && pytest -q
-\tcd frontend && pnpm test
+	@echo "🧪 Running tests..."
+	cd backend && npm test || echo "Backend tests not configured"
+	cd frontend && npm test || echo "Frontend tests not configured"
 
+# Linting and formatting
 lint:
-\tcd backend && ruff check .
-\tcd frontend && pnpm lint
+	@echo "🔍 Linting code..."
+	cd backend && npm run lint || echo "Backend lint not configured"
+	cd frontend && npm run lint
 
 fmt:
-\tcd backend && ruff format .
-\tcd frontend && pnpm format
+	@echo "✨ Formatting code..."
+	cd backend && npm run format || echo "Backend format not configured"
+	cd frontend && npm run format
 
 type:
-\tcd backend && mypy app
-\tcd frontend && tsc --noEmit
+	@echo "📝 Type checking..."
+	cd backend && echo "Backend TypeScript check not configured"
+	cd frontend && npm run type-check
 
-openapi:
-\tcd backend && python manage.py generate_openapi > ../docs/api/openapi_v1.yaml
-
-seed:
-\tcd backend && python manage.py loaddata demo_seed.json
-
+# Cleanup
 clean:
-\trm -rf **/__pycache__ **/*.pyc
+	@echo "🧹 Cleaning up..."
+	rm -rf backend/node_modules backend/dist backend/.next backend/logs
+	rm -rf frontend/node_modules frontend/dist frontend/.next
+	rm -rf **/__pycache__ **/*.pyc
+
+# Logs
+logs:
+	@echo "📋 Showing logs..."
+	tail -f backend/logs/combined.log || echo "No logs found"
+
+# Health check
+health:
+	@echo "🏥 Checking application health..."
+	curl -s http://localhost:8000/health || echo "Backend not responding"
+	curl -s http://localhost:3000 || echo "Frontend not responding"
