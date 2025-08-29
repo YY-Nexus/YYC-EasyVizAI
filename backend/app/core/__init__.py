@@ -1,0 +1,1 @@
+# Core application for YYC³ EasyVizAI
