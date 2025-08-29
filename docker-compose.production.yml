@@ -1,0 +1,299 @@
+version: '3.8'
+
+# YYC³ EasyVizAI 生产环境部署配置
+# 适用于轻量化本地服务器部署
+
+services:
+  # Nginx 反向代理和静态文件服务
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: easyviz_nginx
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./deployment/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deployment/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./deployment/ssl:/etc/nginx/ssl:ro
+      - ./deployment/logs/nginx:/var/log/nginx
+      - frontend_build:/usr/share/nginx/html
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - easyviz_network
+
+  # Django 后端服务
+  backend:
+    build:
+      context: .
+      dockerfile: deployment/backend/Dockerfile
+    container_name: easyviz_backend
+    env_file:
+      - .env.production
+    volumes:
+      - ./deployment/logs/app:/app/logs
+      - ./deployment/data/media:/app/media
+      - ./deployment/backups:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "check", "--deploy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - easyviz_network
+
+  # React 前端构建
+  frontend:
+    build:
+      context: .
+      dockerfile: deployment/frontend/Dockerfile
+    container_name: easyviz_frontend_builder
+    volumes:
+      - frontend_build:/app/build
+    command: ["echo", "Frontend build completed"]
+    networks:
+      - easyviz_network
+
+  # Celery 异步任务处理
+  celery:
+    build:
+      context: .
+      dockerfile: deployment/backend/Dockerfile
+    container_name: easyviz_celery
+    command: celery -A app worker -l info
+    env_file:
+      - .env.production
+    volumes:
+      - ./deployment/logs/celery:/app/logs
+      - ./deployment/data/media:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - easyviz_network
+
+  # Celery Beat 定时任务
+  celery-beat:
+    build:
+      context: .
+      dockerfile: deployment/backend/Dockerfile
+    container_name: easyviz_celery_beat
+    command: celery -A app beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env.production
+    volumes:
+      - ./deployment/logs/celery:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - easyviz_network
+
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: easyviz_postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - ./deployment/data/postgres/data:/var/lib/postgresql/data
+      - ./deployment/data/postgres/init:/docker-entrypoint-initdb.d
+      - ./deployment/backups:/backups
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - easyviz_network
+
+  # Redis 缓存和消息队列
+  redis:
+    image: redis:7-alpine
+    container_name: easyviz_redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - ./deployment/data/redis:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - easyviz_network
+
+  # Neo4j 图数据库
+  neo4j:
+    image: neo4j:5-community
+    container_name: easyviz_neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
+      NEO4J_apoc_export_file_enabled: true
+      NEO4J_apoc_import_file_enabled: true
+    volumes:
+      - ./deployment/data/neo4j/data:/data
+      - ./deployment/data/neo4j/logs:/logs
+      - ./deployment/data/neo4j/import:/var/lib/neo4j/import
+      - ./deployment/data/neo4j/plugins:/plugins
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "${NEO4J_USER}", "-p", "${NEO4J_PASSWORD}", "RETURN 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - easyviz_network
+
+  # MinIO 对象存储
+  minio:
+    image: minio/minio:latest
+    container_name: easyviz_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ACCESS_KEY: ${S3_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${S3_SECRET_KEY}
+    volumes:
+      - ./deployment/data/minio:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - easyviz_network
+
+  # Qdrant 向量数据库
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: easyviz_qdrant
+    volumes:
+      - ./deployment/data/qdrant:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - easyviz_network
+
+  # 日志备份服务
+  log-backup:
+    image: alpine:latest
+    container_name: easyviz_log_backup
+    command: |
+      sh -c '
+        while true; do
+          echo "Starting log backup at $(date)"
+          # 压缩旧日志
+          find /logs -name "*.log" -mtime +7 -exec gzip {} \;
+          # 删除超过30天的压缩日志
+          find /logs -name "*.gz" -mtime +30 -delete
+          # 备份数据库
+          pg_dump -h postgres -U ${DB_USER} ${DB_NAME} > /backups/db_backup_$(date +%Y%m%d_%H%M%S).sql
+          # 保留最近7天的数据库备份
+          find /backups -name "db_backup_*.sql" -mtime +7 -delete
+          echo "Log backup completed at $(date)"
+          sleep 86400  # 每24小时执行一次
+        done
+      '
+    environment:
+      - PGPASSWORD=${DB_PASS}
+    volumes:
+      - ./deployment/logs:/logs
+      - ./deployment/backups:/backups
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - easyviz_network
+
+  # 健康监控服务
+  health-monitor:
+    image: alpine:latest
+    container_name: easyviz_health_monitor
+    command: |
+      sh -c '
+        apk add --no-cache curl
+        while true; do
+          echo "Health check at $(date)"
+          
+          # 检查各个服务
+          for service in nginx:80 backend:8000 postgres:5432 redis:6379 neo4j:7474 minio:9000 qdrant:6333; do
+            host=$(echo $service | cut -d: -f1)
+            port=$(echo $service | cut -d: -f2)
+            if nc -z $host $port; then
+              echo "$service: OK"
+            else
+              echo "$service: FAILED" >> /logs/health_failures.log
+            fi
+          done
+          
+          sleep ${HEALTH_CHECK_INTERVAL:-30}
+        done
+      '
+    volumes:
+      - ./deployment/logs:/logs
+    depends_on:
+      - nginx
+      - backend
+      - postgres
+      - redis
+      - neo4j
+      - minio
+      - qdrant
+    restart: unless-stopped
+    networks:
+      - easyviz_network
+
+# 网络配置
+networks:
+  easyviz_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# 数据卷
+volumes:
+  frontend_build:
+    driver: local
