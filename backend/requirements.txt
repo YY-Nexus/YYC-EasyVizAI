@@ -1,0 +1,68 @@
+# Django and related packages
+Django>=4.2.0,<5.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.0.0
+django-environ>=0.10.0
+django-celery-beat>=2.5.0
+
+# Database drivers
+psycopg2-binary>=2.9.5
+redis>=4.5.0
+
+# WSGI server
+gunicorn>=20.1.0
+gevent>=22.10.0
+
+# Neo4j driver
+neo4j>=5.5.0
+
+# MinIO/S3 client
+boto3>=1.26.0
+minio>=7.1.0
+
+# Vector database
+qdrant-client>=1.1.0
+
+# AI/ML packages
+numpy>=1.24.0
+scikit-learn>=1.2.0
+transformers>=4.25.0
+torch>=1.13.0
+
+# Data processing
+pandas>=1.5.0
+Pillow>=9.4.0
+
+# HTTP client
+requests>=2.28.0
+httpx>=0.23.0
+
+# Async support
+asgiref>=3.6.0
+channels>=4.0.0
+channels-redis>=4.0.0
+
+# Monitoring and logging
+sentry-sdk>=1.15.0
+structlog>=22.3.0
+
+# Development tools
+ruff>=0.0.245
+mypy>=1.0.0
+pytest>=7.2.0
+pytest-django>=4.5.0
+pytest-asyncio>=0.20.0
+coverage>=7.0.0
+
+# Task queue
+celery>=5.2.0
+
+# Auth and security
+PyJWT>=2.6.0
+cryptography>=39.0.0
+
+# API documentation
+drf-spectacular>=0.25.0
+
+# System monitoring
+psutil>=5.9.0
