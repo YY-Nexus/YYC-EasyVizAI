@@ -1,0 +1,91 @@
+Watching for file changes with StatReloader
+ML dependencies not available. Install torch and transformers for full functionality.
+LLM Gateway initialized with device: unavailable
+"GET /api/v1/llm/health/ HTTP/1.1" 200 83
+"GET /api/v1/llm/models/ HTTP/1.1" 200 100
+Internal Server Error: /api/v1/llm/generate/
+Traceback (most recent call last):
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/asgiref/sync.py", line 262, in __call__
+    return call_result.result()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/asgiref/sync.py", line 302, in main_wrap
+    result = await awaitable
+             ^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 60, in _view_wrapper
+    return await view_func(request, *args, **kwargs)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/rest_framework/views.py", line 517, in dispatch
+    self.response = self.finalize_response(request, response, *args, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/rest_framework/views.py", line 429, in finalize_response
+    assert isinstance(response, HttpResponseBase), (
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Expected a `Response`, `HttpResponse` or `StreamingHttpResponse` to be returned from the view, but received a `<class 'coroutine'>`
+"POST /api/v1/llm/generate/ HTTP/1.1" 500 109548
+Internal Server Error: /api/v1/llm/generate/
+Traceback (most recent call last):
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/asgiref/sync.py", line 262, in __call__
+    return call_result.result()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/asgiref/sync.py", line 302, in main_wrap
+    result = await awaitable
+             ^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 60, in _view_wrapper
+    return await view_func(request, *args, **kwargs)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/rest_framework/views.py", line 517, in dispatch
+    self.response = self.finalize_response(request, response, *args, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/.venv/lib/python3.12/site-packages/rest_framework/views.py", line 429, in finalize_response
+    assert isinstance(response, HttpResponseBase), (
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Expected a `Response`, `HttpResponse` or `StreamingHttpResponse` to be returned from the view, but received a `<class 'coroutine'>`
+"POST /api/v1/llm/generate/ HTTP/1.1" 500 109548
+/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/app/llm/views.py changed, reloading.
+Watching for file changes with StatReloader
+/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/app/llm/views.py changed, reloading.
+Watching for file changes with StatReloader
+/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/app/llm/views.py changed, reloading.
+Watching for file changes with StatReloader
+/home/runner/work/YYC-EasyVizAI/YYC-EasyVizAI/backend/app/llm/views.py changed, reloading.
+Watching for file changes with StatReloader
+ML dependencies not available. Install torch and transformers for full functionality.
+LLM Gateway initialized with device: unavailable
+"POST /api/v1/llm/generate/ HTTP/1.1" 200 135
+ML dependencies not available. Cannot load models.
+Bad Request: /api/v1/llm/models/qwen/load/
+"POST /api/v1/llm/models/qwen/load/ HTTP/1.1" 400 37
+ML dependencies not available. Install torch and transformers for full functionality.
+LLM Gateway initialized with device: unavailable
+Bad Request: /api/v1/llm/generate/
+Bad Request: /api/v1/llm/generate/
+ML dependencies not available. Cannot load models.
+Bad Request: /api/v1/llm/models/qwen/load/

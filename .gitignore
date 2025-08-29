@@ -1,0 +1,56 @@
+# Virtual Environments
+backend/.venv/
+backend/venv/
+.env
+.venv/
+venv/
+
+# Django
+*.pyc
+__pycache__/
+*.log
+db.sqlite3
+django.log
+media/
+staticfiles/
+
+# Models and cache
+models/
+*.onnx
+*.bin
+*.safetensors
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+*.egg-info/
+
+# Build artifacts
+dist/
+build/
+*.egg
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Testing
+.pytest_cache/
+.tox/
+
+# Documentation builds
+docs/_build/
