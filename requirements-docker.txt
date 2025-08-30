@@ -1,0 +1,38 @@
+# Core Django dependencies for Docker deployment
+Django>=4.2.0,<5.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.0.0
+channels>=4.0.0
+channels-redis>=4.1.0
+
+# Database
+psycopg2-binary>=2.9.0
+
+# Task queue
+celery>=5.3.0
+redis>=4.5.0
+
+# AI/ML dependencies (CPU-only for Docker)
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+sentencepiece>=0.1.99
+protobuf>=3.20.0
+
+# ONNX Runtime (CPU-only for Docker)
+onnxruntime>=1.15.0
+
+# Model serving
+fastapi>=0.100.0
+uvicorn>=0.22.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+httpx>=0.24.0
+websockets>=11.0.0
+
+# Development tools (optional for production)
+pytest>=7.0.0
+pytest-django>=4.5.0
+pytest-asyncio>=0.21.0
