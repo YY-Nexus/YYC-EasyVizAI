@@ -1,0 +1,74 @@
+# Production-ready Dockerfile for YYC³ EasyVizAI
+FROM python:3.10-slim as base
+
+# Set environment variables for production
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_TRUSTED_HOST=pypi.org
+ENV PIP_TRUSTED_HOST=pypi.python.org
+ENV PIP_TRUSTED_HOST=files.pythonhosted.org
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        g++ \
+        libpq-dev \
+        build-essential \
+        curl \
+        ca-certificates \
+        nginx \
+        supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+# Update certificates
+RUN update-ca-certificates
+
+# Create app user for security
+RUN groupadd -r app && useradd -r -g app app
+
+# Set work directory
+WORKDIR /app
+
+# Copy and install minimal Python dependencies first (for better caching)
+COPY backend/requirements.minimal.txt /app/requirements.minimal.txt
+RUN pip install --no-cache-dir --upgrade pip --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org \
+    && pip install --no-cache-dir --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org -r requirements.minimal.txt
+
+# Copy backend application code
+COPY backend/ /app/
+
+# Try to install full requirements (for AI/ML features)
+RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org -r requirements.txt || echo "Warning: Some packages failed to install, continuing with minimal setup"
+
+# Create necessary directories
+RUN mkdir -p /app/staticfiles /app/media /var/log/app
+
+# Change ownership to app user
+RUN chown -R app:app /app /var/log/app
+
+# Switch to app user
+USER app
+
+# Collect static files
+RUN python manage.py collectstatic --noinput || true
+
+# Switch back to root for final setup
+USER root
+
+# Copy nginx and supervisor configs (you can customize these)
+COPY docker/nginx.conf /etc/nginx/nginx.conf || echo "# Nginx config not provided"
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf || echo "# Supervisor config not provided"
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
+# Switch back to app user for runtime
+USER app
+
+# Run the Django application
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

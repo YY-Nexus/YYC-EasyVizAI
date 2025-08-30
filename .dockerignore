@@ -1,0 +1,63 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.coverage
+
+# Virtual environments
+.venv/
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+
+# Documentation that's not needed in container
+docs/
+*.md
+CHANGELOG.md
+CONTRIBUTING.md
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
+# Development files
+.envrc
+.env.local
+.env.development
+
+# Database
+*.sqlite3
+db.sqlite3
+
+# Log files
+*.log
+
+# Media and static files (will be created in container)
+staticfiles/
+media/
+
+# Temporary files
+tmp/
+temp/
