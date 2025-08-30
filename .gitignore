@@ -1,16 +1,38 @@
+# Logs
+logs/
+*.log
+django.log
+
+# Environment files
+.env
+.env.local
+.env.production
+
 # Virtual Environments
 backend/.venv/
 backend/venv/
-.env
 .venv/
 venv/
 
+# Dependencies
+node_modules/
+*/node_modules/
+*.egg-info/
+
+# Build outputs
+.next/
+dist/
+build/
+*.egg
+
+# Cache
+.cache/
+.parcel-cache/
+__pycache__/
+
 # Django
 *.pyc
-__pycache__/
-*.log
 db.sqlite3
-django.log
 media/
 staticfiles/
 
@@ -19,6 +41,10 @@ models/
 *.onnx
 *.bin
 *.safetensors
+
+# Uploads
+uploads/
+*/uploads/
 
 # IDE
 .vscode/
@@ -30,27 +56,24 @@ models/
 .DS_Store
 Thumbs.db
 
-# Dependencies
-node_modules/
-*.egg-info/
+# PM2
+.pm2/
 
-# Build artifacts
-dist/
-build/
-*.egg
-
-# Jupyter Notebooks
-.ipynb_checkpoints
-
-# Coverage reports
+# Testing
+coverage/
 htmlcov/
 .coverage
 .coverage.*
 coverage.xml
-
-# Testing
 .pytest_cache/
 .tox/
 
+# Jupyter Notebooks
+.ipynb_checkpoints
+
 # Documentation builds
 docs/_build/
+
+# Temporary files
+tmp/
+temp/
